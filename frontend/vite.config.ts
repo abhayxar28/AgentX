@@ -23,26 +23,18 @@ export default defineConfig(({ mode }) => {
         : undefined,
     },
     build: {
+      chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
           manualChunks(id) {
             if (id.includes('node_modules')) {
-              if (id.includes('react')) return 'vendor-react';
               if (id.includes('react-router')) return 'vendor-router';
-              return 'vendor';
+              return 'vendor'; // ← React stays here, always loads first
             }
 
-            if (id.includes('/src/pages/admin/')) {
-              return 'admin';
-            }
-
-            if (id.includes('/src/pages/customers/')) {
-              return 'customers';
-            }
-
-            if (id.includes('/src/pages/policies/')) {
-              return 'policies';
-            }
+            if (id.includes('/src/pages/admin/')) return 'admin';
+            if (id.includes('/src/pages/customers/')) return 'customers';
+            if (id.includes('/src/pages/policies/')) return 'policies';
           },
         },
       },
