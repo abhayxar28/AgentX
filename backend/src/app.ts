@@ -20,14 +20,19 @@ app.get('/health', (_req, res) => {
 });
 app.use(express.static(path.join(__dirname, '../public')));
 
+// SPA fallback for frontend routes (excluding API paths)
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+
+  return res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
 
 // 404
 app.use((_req, res) => {
   sendError(res, 'NOT_FOUND', 'Route not found', 404);
-});
-
-app.get("/{*path}", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/index.html"));
 });
   
 // Global error handler
