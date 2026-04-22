@@ -3,18 +3,41 @@ import app from './app';
 import { env } from './config/env';
 import { logger } from './utils/logger';
 
-async function start() {
+type MongoSrvDnsError = NodeJS.ErrnoException & {
+  hostname?: string;
+};
+
+async function connectMongoWithFallback() {
   try {
     await mongoose.connect(env.mongoUri);
-    logger.info('Connected to MongoDB');
+    return;
+  } catch (err) {
+    const error = err as MongoSrvDnsError;
+    const fallbackUri = env.mongoUriFallback;
+    const shouldUseFallback =
+      env.nodeEnv !== 'production' &&
+      !!fallbackUri &&
+      error.code === 'ECONNREFUSED' &&
+      typeof error.hostname === 'string' &&
+      error.hostname.startsWith('_mongodb._tcp.');
 
-    app.listen(env.port, () => {
-      logger.info(`Server running on port ${env.port}`);
-    });
-  } catch (error) {
-    logger.error('Failed to start server:', error);
-    process.exit(1);
+    if (!shouldUseFallback) {
+      throw err;
+    }
+
+    logger.warn(
+      'Primary MongoDB SRV lookup failed in development. Retrying with MONGODB_URI_FALLBACK.'
+    );
+    await mongoose.connect(fallbackUri);
   }
 }
 
-start();
+connectMongoWithFallback()
+  .then(() => {
+    logger.info('Connected to MongoDB');
+    app.listen(env.port, () => logger.info(`Server running on port ${env.port}`));
+  })
+  .catch((err) => {
+    logger.error('Failed to start server:', err);
+    process.exit(1);
+  });
