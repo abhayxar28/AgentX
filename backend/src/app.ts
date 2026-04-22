@@ -3,7 +3,7 @@ import cors from 'cors';
 import routes from './routes/index';
 import { requestLogger } from './middleware/requestLogger';
 import { sendError } from './utils/apiResponse';
-import path from 'path/win32';
+import path from 'path';
 
 const app = express();
 
