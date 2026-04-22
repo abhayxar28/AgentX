@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node --disable-warning=DEP0169 dist/server.js"
   },
   "dependencies": {
     "@types/bcrypt": "^5.0.2",
